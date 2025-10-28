@@ -20,6 +20,10 @@ rustPlatform.buildRustPackage rec {
     sourceRoot = "${src.name}/frontend";
     fetcherVersion = 2;
     hash = "sha256-8vvWVoY8KZoRFzkcKFIF0MImtz0VVGu+NeNR8H9bYcs=";
+    # Remove incomplete pnpm-workspace.yaml during deps fetch
+    postPatch = ''
+      rm -f pnpm-workspace.yaml
+    '';
   };
 
   TAURI_FRONTEND_PATH = "frontend";
