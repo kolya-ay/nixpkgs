@@ -1,8 +1,6 @@
-{
-  lib,
-  rustPlatform,
-  fetchFromGitHub,
-}:
+{ pkgs }:
+
+with pkgs;
 
 rustPlatform.buildRustPackage rec {
   pname = "splitrail";

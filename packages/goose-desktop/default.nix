@@ -1,11 +1,6 @@
-{
-  lib,
-  buildNpmPackage,
-  fetchFromGitHub,
-  electron,
-  makeWrapper,
-  nodejs,
-}:
+{ pkgs }:
+
+with pkgs;
 
 buildNpmPackage rec {
   pname = "goose-desktop";

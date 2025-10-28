@@ -1,16 +1,6 @@
-{
-  lib,
-  stdenv,
-  rustPlatform,
-  fetchFromGitHub,
-  openssl,
-  pkg-config,
-  webkitgtk_4_1,
-  gtk4,
-  cargo-tauri,
-  nodejs,
-  pnpm_9,
-}:
+{ pkgs }:
+
+with pkgs;
 
 rustPlatform.buildRustPackage rec {
   pname = "gemini-desktop";
