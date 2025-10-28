@@ -22,6 +22,21 @@ buildNpmPackage rec {
   nativeBuildInputs = [
     makeWrapper
     nodejs
+    copyDesktopItems
+    imagemagick
+  ];
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "goose-desktop";
+      desktopName = "Goose";
+      comment = "AI coding assistant powered by Block's Goose";
+      exec = "goose-desktop %U";
+      icon = "goose-desktop";
+      categories = [ "Development" "Utility" ];
+      terminal = false;
+      startupNotify = true;
+    })
   ];
 
   # Skip the default npm build (which runs electron-forge make)
@@ -115,6 +130,15 @@ buildNpmPackage rec {
     makeWrapper ${electron}/bin/electron $out/bin/${pname} \
       --add-flags "$out/lib/${pname}/.vite/build/main.js" \
       --set ELECTRON_IS_DEV 0
+
+    # Generate and install icons at multiple sizes from SVG
+    # Following the pattern from ui/desktop/src/images/prepare.sh
+    for size in 32 64 128 256; do
+      mkdir -p $out/share/icons/hicolor/''${size}x''${size}/apps
+      ${imagemagick}/bin/convert -background none -resize ''${size}x''${size} \
+        $out/lib/${pname}/images/icon.svg \
+        $out/share/icons/hicolor/''${size}x''${size}/apps/goose-desktop.png
+    done
 
     runHook postInstall
   '';
