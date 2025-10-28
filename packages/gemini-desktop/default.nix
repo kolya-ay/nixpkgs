@@ -36,6 +36,20 @@ rustPlatform.buildRustPackage rec {
     cargo-tauri.hook
     nodejs
     pnpm_9.configHook
+    copyDesktopItems
+  ];
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "gemini-desktop";
+      desktopName = "Gemini Desktop";
+      comment = "Desktop UI for Gemini CLI/Qwen Code";
+      exec = "gemini-desktop %U";
+      icon = "gemini-desktop";
+      categories = [ "Development" "X-LLM" ];
+      terminal = false;
+      startupNotify = true;
+    })
   ];
 
   buildInputs = [
@@ -58,8 +72,12 @@ rustPlatform.buildRustPackage rec {
   '';
 
   postInstall = ''
-    mkdir -p $out/share/icons
-    cp ${src}/frontend/public/favicon-32x32.png $out/share/icons/gemini-desktop.png
+    install -Dm644 ${src}/crates/tauri-app/icons/32x32.png \
+      $out/share/icons/hicolor/32x32/apps/gemini-desktop.png
+    install -Dm644 ${src}/crates/tauri-app/icons/64x64.png \
+      $out/share/icons/hicolor/64x64/apps/gemini-desktop.png
+    install -Dm644 ${src}/crates/tauri-app/icons/128x128.png \
+      $out/share/icons/hicolor/128x128/apps/gemini-desktop.png
   '';
 
   # The cargo-tauri hook handles the installation automatically
