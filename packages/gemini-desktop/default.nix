@@ -15,15 +15,11 @@ rustPlatform.buildRustPackage rec {
 
   cargoHash = "sha256-k/PP5AJIJm4G9d/6V5MxNaNGEHbYJmt1o/Jh8/uAtKQ=";
   # Frontend dependencies
-  pnpmDeps = pnpm_9.fetchDeps {
+  pnpmDeps = pnpm_10.fetchDeps {
     inherit pname version src;
     sourceRoot = "${src.name}/frontend";
-    fetcherVersion = 2;
-    hash = "sha256-8vvWVoY8KZoRFzkcKFIF0MImtz0VVGu+NeNR8H9bYcs=";
-    # Remove incomplete pnpm-workspace.yaml during deps fetch
-    postPatch = ''
-      rm -f pnpm-workspace.yaml
-    '';
+    fetcherVersion = 1;
+    hash = "sha256-ifI92eaijbj18mycQcWQw+YG7mbQBCUbskaA8jOktsY=";
   };
 
   TAURI_FRONTEND_PATH = "frontend";
@@ -35,7 +31,7 @@ rustPlatform.buildRustPackage rec {
     pkg-config
     cargo-tauri.hook
     nodejs
-    pnpm_9.configHook
+    pnpm_10.configHook
     copyDesktopItems
   ];
 
@@ -65,11 +61,6 @@ rustPlatform.buildRustPackage rec {
     "--package"
     "tauri-app"
   ];
-
-  # Remove the incomplete pnpm-workspace.yaml for the main build too
-  postPatch = ''
-    rm -f frontend/pnpm-workspace.yaml
-  '';
 
   postInstall = ''
     install -Dm644 ${src}/crates/tauri-app/icons/32x32.png \
