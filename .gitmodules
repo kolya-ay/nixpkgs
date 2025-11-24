@@ -1,0 +1,9 @@
+[submodule "claude-desktop-linux-flake"]
+	path = claude-desktop-linux-flake
+	url = https://github.com/k3d3/claude-desktop-linux-flake
+[submodule "claude-desktop-bin"]
+	path = claude-desktop-bin
+	url = https://aur.archlinux.org/claude-desktop-bin.git
+[submodule "nix-ai-tools"]
+	path = nix-ai-tools
+	url = git@github.com:numtide/nix-ai-tools
