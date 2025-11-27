@@ -18,6 +18,7 @@
     inputs:
     inputs.blueprint {
       inherit inputs;
+      nixpkgs.config.allowUnfree = true;
       nixpkgs.overlays = [
         (final: prev: {
           nix-ai-tools = inputs.nix-ai-tools.packages.${final.system};
