@@ -10,6 +10,7 @@
   nodejs,
   asar,
   icoutils,
+  nix-ai-tools,
 }:
 
 let
@@ -149,7 +150,8 @@ stdenv.mkDerivation rec {
     makeWrapper ${electron}/bin/electron $out/bin/claude-desktop \
       --add-flags "$out/lib/claude-desktop/app.asar" \
       --set DISABLE_AUTOUPDATER 1 \
-      --set NODE_ENV production
+      --set NODE_ENV production \
+      --prefix PATH : ${lib.makeBinPath [ nix-ai-tools.claude-code ]}
 
     # Extract and install icon using icoutils
     if [ -f ./extract/lib/net45/resources/TrayIconTemplate.png ]; then
