@@ -1,5 +1,5 @@
 {
-  description = "A Nix flake for packaging Goose and Gemini desktop applications.";
+  description = "A Nix flake for packaging useful applications.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -7,8 +7,8 @@
       url = "github:numtide/blueprint";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-ai-tools = {
-      url = "github:numtide/nix-ai-tools";
+    llm-agents = {
+      url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.blueprint.follows = "blueprint";
     };
@@ -21,7 +21,7 @@
       nixpkgs.config.allowUnfree = true;
       nixpkgs.overlays = [
         (final: prev: {
-          nix-ai-tools = inputs.nix-ai-tools.packages.${final.system};
+          llm-agents = inputs.llm-agents.packages.${final.system};
         })
       ];
     };

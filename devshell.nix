@@ -16,8 +16,8 @@ pkgs.mkShell {
     pkgs.rustc
     pkgs.nodejs
     pkgs.electron
-    # nix-ai-tools packages available via overlay if needed individually
-    # e.g., pkgs.nix-ai-tools.claude-code
+    # llm-agents packages available via overlay if needed individually
+    # e.g., pkgs.llm-agents.claude-code
   ];
 
   shellHook = ''
