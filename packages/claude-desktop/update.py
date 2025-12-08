@@ -140,6 +140,15 @@ def main() -> None:
     current_version = version_match.group(1)
     print(f"Current version: {current_version}")
 
+    # Extract x64CommitHash
+    x64_commit_match = re.search(r'x64CommitHash\s*=\s*"([^"]+)"', content)
+    if not x64_commit_match:
+        print("ERROR: Could not find x64CommitHash in package.nix")
+        sys.exit(1)
+
+    current_commit_hash = x64_commit_match.group(1)
+    print(f"Current x64CommitHash: {current_commit_hash}")
+
     # Extract URL pattern for x86_64
     x64_url_match = re.search(
         r'x86_64-linux\s*=\s*fetchurl\s*\{[^}]*url\s*=\s*"([^"]+)"',
@@ -153,8 +162,9 @@ def main() -> None:
 
     x64_url_template = x64_url_match.group(1)
 
-    # Substitute ${version} placeholder with current version
+    # Substitute ${version} and ${x64CommitHash} placeholders
     x64_url = x64_url_template.replace("${version}", current_version)
+    x64_url = x64_url.replace("${x64CommitHash}", current_commit_hash)
 
     # Use fixed arm64 URL (not versioned)
     arm64_url = "https://storage.googleapis.com/osprey-downloads-c02f6a0d-347c-492b-a752-3e0651722e97/nest-win-arm64/Claude-Setup-arm64.exe"

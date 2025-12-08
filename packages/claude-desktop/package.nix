@@ -14,12 +14,20 @@
 }:
 
 let
+  # Version update process:
+  # 1. Check AUR PKGBUILD for latest version and x64 commit hash:
+  #    https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=claude-desktop-bin
+  #    Look for: pkgver and source_x86_64 URL's Claude-{hash}.exe
+  # 2. Update version and x64CommitHash below, then run update script:
+  #    cd packages/claude-desktop && ./update.py
+  # 3. Verify: NIXPKGS_ALLOW_UNFREE=1 nix build .#claude-desktop --impure
   pname = "claude-desktop";
-  version = "1.0.1217";
+  version = "1.0.1768";
+  x64CommitHash = "67d01376d0e9d08b328455f6db9e63b0d603506a";
 
   srcs = {
     x86_64-linux = fetchurl {
-      url = "https://downloads.claude.ai/releases/win32/x64/${version}/Claude-0cb4a3120aa28421aeb48e8c54f5adf8414ab411.exe";
+      url = "https://downloads.claude.ai/releases/win32/x64/${version}/Claude-${x64CommitHash}.exe";
       hash = "sha256-baSOogkwk0wcG9UmZt4MFFj+ovtwidPQtHmsUnsUCIA=";
     };
     aarch64-linux = fetchurl {
