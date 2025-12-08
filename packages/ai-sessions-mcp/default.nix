@@ -1,8 +1,6 @@
-{
-  lib,
-  buildGoModule,
-  fetchFromGitHub,
-}:
+{ pkgs }:
+
+with pkgs;
 
 buildGoModule rec {
   pname = "ai-sessions-mcp";
@@ -17,7 +15,10 @@ buildGoModule rec {
 
   vendorHash = "sha256-/nbpUIa856/LaPT59VjLcMwGkTuywRiwjvyOpzNP/0I=";
 
-  ldflags = [ "-s" "-w" ];
+  ldflags = [
+    "-s"
+    "-w"
+  ];
 
   meta = {
     description = "MCP server for searching and accessing your AI coding sessions from Claude Code,  Gemini CLI, opencode, and OpenAI Codex. Also an uploader for aisessions.dev";

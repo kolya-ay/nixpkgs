@@ -169,7 +169,7 @@ def main() -> None:
     # Use fixed arm64 URL (not versioned)
     arm64_url = "https://storage.googleapis.com/osprey-downloads-c02f6a0d-347c-492b-a752-3e0651722e97/nest-win-arm64/Claude-Setup-arm64.exe"
 
-    print(f"\nChecking installers...")
+    print("\nChecking installers...")
     print(f"x64 URL: {x64_url}")
 
     # Check if URLs are accessible
@@ -183,33 +183,7 @@ def main() -> None:
         sys.exit(1)
     print("✓ arm64 installer is accessible")
 
-    # Download and extract version
-    print("\nExtracting version from installer...")
-    version = None
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        installer_path = Path(temp_dir) / "claude-setup.exe"
-
-        try:
-            print("Downloading x64 installer...")
-            download_file(x64_url, installer_path)
-
-            if installer_path.exists():
-                version = extract_version_from_installer(installer_path)
-                if version:
-                    print(f"✓ Detected version: {version}")
-        except Exception as e:
-            print(f"Warning: Failed to extract version: {e}")
-
-    if not version:
-        print("ERROR: Could not detect version from installer")
-        sys.exit(1)
-
-    if version == current_version:
-        print(f"\nVersion {version} is already up to date!")
-        sys.exit(0)
-
-    print(f"\nNew version available: {current_version} → {version}")
+    print(f"\nRecalculating hashes for version {current_version}...")
 
     # Calculate hashes for both platforms
     print("\nCalculating hashes...")
@@ -224,44 +198,33 @@ def main() -> None:
         x64_hash = calculate_file_hash(x64_file)
         print(f"✓ x64 hash: {x64_hash}")
 
-        # Download arm64
-        arm64_file = temp_path / "claude-arm64.exe"
-        print("Downloading arm64 installer...")
-        download_file(arm64_url, arm64_file)
-        arm64_hash = calculate_file_hash(arm64_file)
-        print(f"✓ arm64 hash: {arm64_hash}")
+        # ARM64 is not hashed
+        # arm64_file = temp_path / "claude-arm64.exe"
+        # print("Downloading arm64 installer...")
+        # download_file(arm64_url, arm64_file)
+        # arm64_hash = calculate_file_hash(arm64_file)
+        # print(f"✓ arm64 hash: {arm64_hash}")
 
     # Update package.nix
     print("\nUpdating package.nix...")
 
-    # Update version
-    content = re.sub(r'version\s*=\s*"[^"]+"', f'version = "{version}"', content)
-    print(f"✓ Updated version to {version}")
-
-    # Update x64 hash
     content = re.sub(
-        r'(x86_64-linux\s*=\s*fetchurl\s*\{[^}]*hash\s*=\s*")sha256-[A-Za-z0-9+/=]+"',
+        r'(x86_64-linux\s*=\s*fetchurl\s*\{[\s\S]*?hash\s*=\s*")sha256-[A-Za-z0-9+/=]+"',
         rf'\1{x64_hash}"',
         content,
-        flags=re.MULTILINE | re.DOTALL,
     )
     print("✓ Updated x64 hash")
 
-    # Update arm64 hash
-    content = re.sub(
-        r'(aarch64-linux\s*=\s*fetchurl\s*\{[^}]*hash\s*=\s*")sha256-[A-Za-z0-9+/=]+"',
-        rf'\1{arm64_hash}"',
-        content,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    print("✓ Updated arm64 hash")
+    # ARM64 is not hashed
+    # content = re.sub(
+    #     r'(aarch64-linux\s*=\s*fetchurl\s*\{[\s\S]*?hash\s*=\s*")sha256-[A-Za-z0-9+/=]+"',
+    #     rf'\1{arm64_hash}"',
+    #     content,
+    # )
+    # print("✓ Updated arm64 hash")
 
-    # Write updated content
     package_file.write_text(content)
-
-    print(f"\n✓ Update complete! {current_version} → {version}")
-    print("\nPlease verify the changes and test the build:")
-    print("  NIXPKGS_ALLOW_UNFREE=1 nix build .#claude-desktop --impure")
+    print(f"\n✓ Hash update complete for version {current_version}!")
 
 
 if __name__ == "__main__":
