@@ -4,14 +4,17 @@ let
     name = "nix-init-config.toml";
     text = ''
       # nix-init configuration
+      # You need to be in `nix develop`
       # See: https://github.com/nix-community/nix-init
-      nixpkgs = 'builtins.getFlake "nixpkgs"'
+      nixpkgs = "builtins.getFlake \"nixpkgs\""
+      maintainers = ["kolya.ay"]
     '';
   };
 in
 pkgs.mkShell {
   buildInputs = [
     pkgs.nix-init
+    pkgs.go
     pkgs.cargo
     pkgs.rustc
     pkgs.nodejs

@@ -1,5 +1,4 @@
-#!/usr/bin/env nix-shell
-#! nix-shell -i python3 -p python3 p7zip
+#!/usr/bin/env -S nix shell nixpkgs#python3 nixpkgs#p7zip --command python3
 
 """Update script for claude-desktop package.
 
