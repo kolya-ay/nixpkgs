@@ -28,7 +28,7 @@ let
   srcs = {
     x86_64-linux = fetchurl {
       url = "https://downloads.claude.ai/releases/win32/x64/${version}/Claude-${x64CommitHash}.exe";
-      hash = "sha256-baSOogkwk0wcG9UmZt4MFFj+ovtwidPQtHmsUnsUCIA=";
+      hash = "sha256-x76Qav38ya3ObpWIq3dDowo79LgvVquMfaZeH8M1LUk=";
     };
     aarch64-linux = fetchurl {
       url = "https://storage.googleapis.com/osprey-downloads-c02f6a0d-347c-492b-a752-3e0651722e97/nest-win-arm64/Claude-Setup-arm64.exe";
@@ -133,6 +133,19 @@ stdenv.mkDerivation rec {
       echo "Title bar fix applied to: $js_file"
     fi
 
+    # Patch claude-code detection to use Nix store path
+    echo "Patching claude-code detection..."
+    local index_js="app.asar.contents/.vite/build/index.js"
+    if [ -f "$index_js" ]; then
+      # Patch getBinaryPathIfReady() to return Nix store path on Linux
+      sed -i 's|async getBinaryPathIfReady(){return await this\.binaryExists(this\.requiredVersion)?this\.getBinaryPath(this\.requiredVersion):null}|async getBinaryPathIfReady(){if(process.platform==="linux"){const claudePath="${llm-agents.claude-code}/bin/claude";try{const fs=require("fs");if(fs.existsSync(claudePath))return claudePath}catch(e){}}return await this.binaryExists(this.requiredVersion)?this.getBinaryPath(this.requiredVersion):null}|g' "$index_js"
+
+      # Patch getStatus() to return Ready if Nix claude exists on Linux
+      sed -i 's|async getStatus(){if(await this\.binaryExists(this\.requiredVersion))|async getStatus(){if(process.platform==="linux"){const claudePath="${llm-agents.claude-code}/bin/claude";try{const fs=require("fs");if(fs.existsSync(claudePath))return re.info(`[CCD] Status: ready (Nix store)`,claudePath),Dg.Ready}catch(e){}}if(await this.binaryExists(this.requiredVersion))|g' "$index_js"
+
+      echo "Claude-code detection patched"
+    fi
+
     # Repack app.asar
     echo "Repacking app.asar..."
     ${asar}/bin/asar pack app.asar.contents app.asar
@@ -154,17 +167,16 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/claude-desktop/locales
     cp ./extract/lib/net45/resources/*.json $out/lib/claude-desktop/locales/ 2>/dev/null || true
 
+    # Create symlink for claude binary in lib directory so the app can find it
+    mkdir -p $out/lib/claude-desktop/bin
+    ln -s ${llm-agents.claude-code}/bin/claude $out/lib/claude-desktop/bin/claude
+
     # Create wrapper script
     makeWrapper ${electron}/bin/electron $out/bin/claude-desktop \
       --add-flags "$out/lib/claude-desktop/app.asar" \
       --set DISABLE_AUTOUPDATER 1 \
       --set NODE_ENV production \
-      --prefix PATH : ${
-        lib.makeBinPath [
-          llm-agents.claude-code
-          nodejs
-        ]
-      }
+      --prefix PATH : "$out/lib/claude-desktop/bin"
 
     # Extract and install icon using icoutils
     if [ -f ./extract/lib/net45/resources/TrayIconTemplate.png ]; then
