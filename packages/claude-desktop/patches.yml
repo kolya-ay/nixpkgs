@@ -1,0 +1,25 @@
+id: patch-binary-path
+language: javascript
+severity: hint
+message: "Patched getBinaryPathIfReady for Linux"
+rule:
+  pattern: return await this.binaryExists($VER)?this.getBinaryPath($VER):null
+fix: |-
+  return (process.platform==="linux"&&process.env.CLAUDE_CODE_PATH)?process.env.CLAUDE_CODE_PATH:(await this.binaryExists($VER)?this.getBinaryPath($VER):null)
+---
+id: patch-status
+language: javascript
+severity: hint
+message: "Patched getStatus for Linux"
+rule:
+  pattern: if(await this.binaryExists($VER))$$$THEN
+fix: |-
+  if(process.platform==="linux"&&process.env.CLAUDE_CODE_PATH){const p=process.env.CLAUDE_CODE_PATH;try{if(require("fs").existsSync(p))return re.info("[CCD] Status: ready (Nix)",p),Dg.Ready}catch(e){}}if(await this.binaryExists($VER))$$$THEN
+---
+id: patch-title-bar
+language: javascript
+severity: hint
+message: "Fixed title bar for Linux"
+rule:
+  pattern: if(!$A&&$B)return null
+fix: if($A&&$B)return null

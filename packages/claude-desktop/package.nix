@@ -127,29 +127,12 @@ stdenv.mkDerivation rec {
     mkdir -p app.asar.contents/node_modules/claude-native
     cp ${./claude-stub.js} app.asar.contents/node_modules/claude-native/index.js
 
-    # Inject global helper functions at the top of index.js
-    echo "Injecting global helpers..."
-    local index_js="app.asar.contents/.vite/build/index.js"
-    if [ -f "$index_js" ]; then
-      cat ${./globals-inject.js} "$index_js" > /tmp/new-index.js
-      mv /tmp/new-index.js "$index_js"
-
-      # Verify injection
-      if grep -q "getNixClaudePath" "$index_js"; then
-        echo "✓ Global helpers injected"
-      else
-        echo "✗ Failed to inject global helpers"
-        exit 1
-      fi
-    fi
-
-    # Apply all ast-grep patches (index.js + title bar) in single invocation
+    # Apply ast-grep patches for Linux compatibility
     echo "Applying ast-grep patches..."
-    ${ast-grep}/bin/ast-grep scan --inline-rules '${astGrepRules}' --update-all app.asar.contents || {
-      echo "✗ ast-grep failed"
-      exit 1
-    }
-    echo "✓ All patches applied with ast-grep"
+    local index_js="app.asar.contents/.vite/build/index.js"
+    local main_page=$(find app.asar.contents -name "MainWindowPage-*.js" | head -1)
+    ${ast-grep}/bin/ast-grep scan -r ${./patches.yml} --update-all "$index_js" "$main_page"
+    echo "✓ Patches applied"
 
     # Repack app.asar
     echo "Repacking app.asar..."
@@ -172,16 +155,12 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/claude-desktop/locales
     cp ./extract/lib/net45/resources/*.json $out/lib/claude-desktop/locales/ 2>/dev/null || true
 
-    # Create symlink for claude binary in lib directory so the app can find it
-    mkdir -p $out/lib/claude-desktop/bin
-    ln -s ${llm-agents.claude-code}/bin/claude $out/lib/claude-desktop/bin/claude
-
     # Create wrapper script
     makeWrapper ${electron}/bin/electron $out/bin/claude-desktop \
       --add-flags "$out/lib/claude-desktop/app.asar" \
+      --set CLAUDE_CODE_PATH "${llm-agents.claude-code}/bin/claude" \
       --set DISABLE_AUTOUPDATER 1 \
-      --set NODE_ENV production \
-      --prefix PATH : "$out/lib/claude-desktop/bin"
+      --set NODE_ENV production
 
     # Extract and install icon using icoutils
     if [ -f ./extract/lib/net45/resources/TrayIconTemplate.png ]; then
