@@ -11,6 +11,7 @@
   asar,
   icoutils,
   llm-agents,
+  ast-grep,
 }:
 
 let
@@ -51,6 +52,7 @@ stdenv.mkDerivation rec {
     nodejs
     asar
     icoutils
+    ast-grep
   ];
 
   buildInputs = [
@@ -125,26 +127,29 @@ stdenv.mkDerivation rec {
     mkdir -p app.asar.contents/node_modules/claude-native
     cp ${./claude-stub.js} app.asar.contents/node_modules/claude-native/index.js
 
-    # Fix title bar detection issue
-    echo "Applying title bar fix..."
-    local js_file=$(find app.asar.contents -name "MainWindowPage-*.js" 2>/dev/null | head -1)
-    if [ -n "$js_file" ]; then
-      sed -i -E 's/if\(!([a-zA-Z]+)[[:space:]]*&&[[:space:]]*([a-zA-Z]+)\)/if(\1 \&\& \2)/g' "$js_file"
-      echo "Title bar fix applied to: $js_file"
-    fi
-
-    # Patch claude-code detection to use Nix store path
-    echo "Patching claude-code detection..."
+    # Inject global helper functions at the top of index.js
+    echo "Injecting global helpers..."
     local index_js="app.asar.contents/.vite/build/index.js"
     if [ -f "$index_js" ]; then
-      # Patch getBinaryPathIfReady() to return Nix store path on Linux
-      sed -i 's|async getBinaryPathIfReady(){return await this\.binaryExists(this\.requiredVersion)?this\.getBinaryPath(this\.requiredVersion):null}|async getBinaryPathIfReady(){if(process.platform==="linux"){const claudePath="${llm-agents.claude-code}/bin/claude";try{const fs=require("fs");if(fs.existsSync(claudePath))return claudePath}catch(e){}}return await this.binaryExists(this.requiredVersion)?this.getBinaryPath(this.requiredVersion):null}|g' "$index_js"
+      cat ${./globals-inject.js} "$index_js" > /tmp/new-index.js
+      mv /tmp/new-index.js "$index_js"
 
-      # Patch getStatus() to return Ready if Nix claude exists on Linux
-      sed -i 's|async getStatus(){if(await this\.binaryExists(this\.requiredVersion))|async getStatus(){if(process.platform==="linux"){const claudePath="${llm-agents.claude-code}/bin/claude";try{const fs=require("fs");if(fs.existsSync(claudePath))return re.info(`[CCD] Status: ready (Nix store)`,claudePath),Dg.Ready}catch(e){}}if(await this.binaryExists(this.requiredVersion))|g' "$index_js"
-
-      echo "Claude-code detection patched"
+      # Verify injection
+      if grep -q "getNixClaudePath" "$index_js"; then
+        echo "✓ Global helpers injected"
+      else
+        echo "✗ Failed to inject global helpers"
+        exit 1
+      fi
     fi
+
+    # Apply all ast-grep patches (index.js + title bar) in single invocation
+    echo "Applying ast-grep patches..."
+    ${ast-grep}/bin/ast-grep scan --inline-rules '${astGrepRules}' --update-all app.asar.contents || {
+      echo "✗ ast-grep failed"
+      exit 1
+    }
+    echo "✓ All patches applied with ast-grep"
 
     # Repack app.asar
     echo "Repacking app.asar..."
