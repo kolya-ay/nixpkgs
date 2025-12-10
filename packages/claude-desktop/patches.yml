@@ -21,5 +21,5 @@ language: javascript
 severity: hint
 message: "Fixed title bar for Linux"
 rule:
-  pattern: if(!$A&&$B)return null
-fix: if($A&&$B)return null
+  pattern: if(!$A&&$B)return null;
+fix: if($A&&$B)return null;

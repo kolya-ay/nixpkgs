@@ -158,6 +158,7 @@ stdenv.mkDerivation rec {
     # Create wrapper script
     makeWrapper ${electron}/bin/electron $out/bin/claude-desktop \
       --add-flags "$out/lib/claude-desktop/app.asar" \
+      --add-flags "--password-store=gnome-libsecret" \
       --set CLAUDE_CODE_PATH "${llm-agents.claude-code}/bin/claude" \
       --set DISABLE_AUTOUPDATER 1 \
       --set NODE_ENV production
